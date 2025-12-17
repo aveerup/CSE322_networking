@@ -2,9 +2,11 @@ package client;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -58,7 +60,7 @@ public class Client {
                                 + "5. view unread messages\n"
                                 + "6. upload a file\n"
                                 + "7. view upload/download history\n"
-                                + "8. log out\n"
+                                + "8. log out\n\n"
                 );
 
                 operation = scanner.nextLine();
@@ -86,7 +88,8 @@ public class Client {
                             System.out.println("""
                                     \nChoose an option --
                                     1) Download a file
-                                    2) cancel 
+                                    2) cancel
+
                                     """);
                             
                             String option = scanner.nextLine();
@@ -163,7 +166,8 @@ public class Client {
                             System.out.println("""
                                     \nChoose an option --
                                     1) Download a file
-                                    2) cancel 
+                                    2) cancel
+
                                     """);
                             
                             String option = scanner.nextLine();
@@ -215,9 +219,70 @@ public class Client {
                         break;
                     
                     case "4":
+                        out.writeObject("4");
+
+                        while(true) {
+                            System.out.println("Write a short description of the file you want(maximum 100 characters): ");
+                            String description = scanner.nextLine();
+                            if(description.length() > 100) {
+                                System.out.println("description character limit exceeded, try again");
+                            } else {
+                                out.writeObject(description);
+                                break;
+                            }
+                        }
+
+                        while(true) {
+                            System.out.println("""
+                                            \nChoose message type:
+                                            1) personal
+                                            2) ALL
+                                            3) cancel
+                                            
+                                            """);
+                            
+                            String option = scanner.nextLine();
+                            if(option.equalsIgnoreCase("1")) {
+                                out.writeObject("1");
+
+                                System.out.print("Write the recipient name: ");
+                                String recipient = scanner.nextLine();
+                                out.writeObject(recipient);
+
+                                response = (String) in.readObject();
+                                if(response.equalsIgnoreCase("recipient not valid")) {
+                                    System.out.println("\n!!!  " + response + "  !!!");
+                                    continue;
+
+                                } else {
+                                    System.out.println("\n" + response);
+                                }
+
+                                break;
+
+                            } else if(option.equalsIgnoreCase("2")) {
+                                out.writeObject("2");
+                                
+                                response = (String) in.readObject();
+                                System.out.println("\n" + response);
+
+                                break;
+
+                            } else if(option.equalsIgnoreCase("3")) {
+                                out.writeObject("3");
+                                break;
+
+                            }
+                        }
+                        
                         break;
                     
                     case "5":
+                        out.writeObject("5");
+
+                        response = (String) in.readObject();
+                        System.out.println(response);
+                        
                         break;
                     
                     case "6":
@@ -280,6 +345,7 @@ public class Client {
                                                 2) public ( any user can access your file )
                                                 
                                                 Select option 1 or 2:
+
                                                 """);
 
                                         response = scanner.nextLine();
@@ -311,9 +377,18 @@ public class Client {
                         break;
                     
                     case "7":
+                        out.writeObject("7");
+
+                        response = (String) in.readObject();
+                        System.out.println(response);
+
                         break;
 
                     case "8":
+                        out.writeObject("8");
+
+                        logOut = true;
+                        
                         break;
                 }
 

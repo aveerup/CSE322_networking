@@ -27,6 +27,10 @@ class Server{
                     serverConfig.MIN_CHUNK_SIZE = Integer.parseInt(lines[1].trim());
                 } else if(lines[0].trim().equalsIgnoreCase("curr_buffer_size")) {
                     serverConfig.CURR_BUFFER_SIZE = Long.parseLong(lines[1].trim());
+                } else if(lines[0].trim().equalsIgnoreCase("max_user_num")) {
+                    serverConfig.MAX_USER_NUM = Integer.parseInt(lines[1].trim());
+                } else if(lines[0].trim().equalsIgnoreCase("curr_user_num")) {
+                    serverConfig.CURR_USER_NUM = Integer.parseInt(lines[1].trim());
                 }
 
             }
@@ -44,21 +48,15 @@ class Server{
         boolean stopServer = false; // Stop the server when becomes true
         Map<String, Boolean> users = new HashMap<>();
         Map<String, String> files = new HashMap<>();
+        Map<String, User> userMessageWriter = new HashMap<>();
         
         ServerConfig serverConfig = new ServerConfig();
 
         serverConfig(serverConfig);
 
-        Long MAX_BUFFER_SIZE = serverConfig.MAX_BUFFER_SIZE;
-        Integer MAX_CHUNK_SIZE = serverConfig.MAX_CHUNK_SIZE;
-        Integer MIN_CHUNK_SIZE = serverConfig.MIN_CHUNK_SIZE;
-        Long CURR_BUFFER_SIZE = serverConfig.CURR_BUFFER_SIZE;
-        final Object serverConfigLock = new Object();
-
         try {
             File userList = new File("./userList.txt");
             File userData = new File("./userData");
-            File fileList = new File("./fileList.txt");
             
             if(!userList.exists()) {
                 userList.createNewFile();
@@ -68,53 +66,37 @@ class Server{
                 userData.mkdir();
             }
 
-            if(!fileList.exists()) {
-                fileList.createNewFile();
-            }
-
             BufferedReader userListReader = new BufferedReader(new FileReader("./userList.txt"));        
             BufferedWriter userListWriter = new BufferedWriter(new FileWriter("./userList.txt", true));
             
-            BufferedReader fileListReader = new BufferedReader(new FileReader("./fileList.txt"));
-            BufferedWriter fileListWriter = new BufferedWriter(new FileWriter("./fileList.txt"));
-
             String line = null;
             
             while((line = userListReader.readLine()) != null) {
                 users.put(line, false);
-            }
-
-            while((line = fileListReader.readLine()) != null) {
-                String[] fileIdName = line.split(",");
-
-                files.put(fileIdName[0], fileIdName[1]);
+                userMessageWriter.put(line, new User(line));
             }
 
             ServerSocket serverSocket = new ServerSocket(port);
-            System.out.println("Server is listening on port " + port);
+            System.out.println("\nServer is listening on port " + port);
 
             while (!stopServer) {
                 // System.out.println("Write 'terminate' to stop server");
 
                 Socket socket = serverSocket.accept();
-                System.out.println("New client connected");
+                System.out.println("\nNew client connected");
 
                 Session session = new Session(socket, 
                                             userListWriter, 
                                             users,
                                             files,
-                                            MAX_BUFFER_SIZE,
-                                            MAX_CHUNK_SIZE,
-                                            MIN_CHUNK_SIZE,
-                                            CURR_BUFFER_SIZE);
+                                            serverConfig,
+                                            userMessageWriter);
                 session.start();
             }
             
             serverSocket.close();
             userListReader.close();
             userListWriter.close();
-            fileListReader.close();
-            fileListWriter.close();
 
         } catch (IOException e) {
             System.out.println("Error occurred: " + e.getMessage());

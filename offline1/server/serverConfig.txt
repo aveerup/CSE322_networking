@@ -1,5 +1,6 @@
-// everything is in bytes
 max_buffer_size, 1073741824
 min_chunk_size, 1024
 max_chunk_size, 4096
 curr_buffer_size, 0
+max_user_num, 100
+curr_user_num, 2
